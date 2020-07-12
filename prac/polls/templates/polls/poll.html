@@ -1,0 +1,22 @@
+<!-- templates > polls > poll.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% for board in boardobject %}
+
+        <p>제목 : {{ board.title }}</p>
+        <p> {{ board.content|linebreaksbr }}</p>
+        <br>
+        {% for line in board.abc %}
+        <p>내용 : {{ line }}</p>
+        {% endfor %}
+        <p>글쓴 날짜 : {{ board.write_date }}</p>
+    
+    {% endfor %}
+</body>
+</html>
