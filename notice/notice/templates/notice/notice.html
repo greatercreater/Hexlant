@@ -1,0 +1,30 @@
+<!-- templates > notice > notice.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% for n in noticeboard %}
+        <p>ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ</p>
+        <p>ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ</p>
+        <p>{{ n.title }}</p>
+        <p>ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ</p>
+       
+        <p>{{ n.top.text }}</p>
+        
+        <p>ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ</p>
+        {% for article1 in n.guide %}
+            <p>{{ article1.text }}</p>
+        {% endfor %}
+        <p>ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ</p>
+        {% for article in n.notices %}
+            <p>{{ article.text }}</p>
+        {% endfor %}
+        <p>ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ</p>
+        <p>ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ</p>
+    {% endfor %}
+</body>
+</html>
