@@ -47,20 +47,20 @@ def send2U(arr,title,date,link,exchange):
     bot=telegram.Bot(token=my_token)
     #updates= bot.getUpdates()
     #chat_ID=updates[-1].message.chat.id
-    #mychannel_num
-    chat_ID=1034101411
+    #chat_ID=1034101411
+    id=-1001472766381
     
     cur_time=datetime.now().strftime("%c")
     con=sqlite3.connect("crol/crol_db.sqlite")
     cur=con.cursor()
     for a in arr:
         if arr[a]=="new":
-            bot.sendMessage(chat_id=chat_ID, text='<<New notice from '+exchange+'>>')
-            bot.sendMessage(chat_id=chat_ID, text=title[a]+"\nUpload Date: "+date[a]+"\n"+link[a])
+            bot.sendMessage(chat_id=id, text='<<New notice from '+exchange+'>>')
+            bot.sendMessage(chat_id=id, text=title[a]+"\nUpload Date: "+date[a]+"\n"+link[a])
             cur.execute("insert into notice_"+exchange+" values(?,?,?,?,?,?)",(title[a],date[a],link[a],exchange,cur_time,''))
         elif arr[a]=="mod":
-            bot.sendMessage(chat_id=chat_ID, text='<Correction occured on '+exchange+'>')
-            bot.sendMessage(chat_id=chat_ID, text=title[a]+"\nUpload Date: "+date[a]+"\n"+link[a])
+            bot.sendMessage(chat_id=id, text='<Correction occured on '+exchange+'>')
+            bot.sendMessage(chat_id=id, text=title[a]+"\nUpload Date: "+date[a]+"\n"+link[a])
             cur.execute("update notice_"+exchange+" set TITLE = ?, DB_MODIFIED = ? where LINK = ?",(title[a],cur_time,link[a]))
         else:
             print("이상이상2")
