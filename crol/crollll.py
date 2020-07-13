@@ -6,6 +6,7 @@ from datetime import datetime, date, timedelta
 import sqlite3
 import telegram
 
+
 def CompareandSet(title, date, link, exchange):
     con=sqlite3.connect("crol/crol_db.sqlite")
     cur=con.cursor()
@@ -40,7 +41,15 @@ def CompareandSet(title, date, link, exchange):
     return arr
 
 
-def send2U(arr,bot,chat_ID,title,date,link,exchange):
+def send2U(arr,title,date,link,exchange):
+    my_token='1339037346:AAHOFfZQZb5qqRV_xacyyVyhQb9-qaXWIFE'
+
+    bot=telegram.Bot(token=my_token)
+    #updates= bot.getUpdates()
+    #chat_ID=updates[-1].message.chat.id
+    #mychannel_num
+    chat_ID=1034101411
+    
     cur_time=datetime.now().strftime("%c")
     con=sqlite3.connect("crol/crol_db.sqlite")
     cur=con.cursor()
@@ -48,11 +57,11 @@ def send2U(arr,bot,chat_ID,title,date,link,exchange):
         if arr[a]=="new":
             bot.sendMessage(chat_id=chat_ID, text='<<New notice from '+exchange+'>>')
             bot.sendMessage(chat_id=chat_ID, text=title[a]+"\nUpload Date: "+date[a]+"\n"+link[a])
-            #cur.execute("insert into notice_"+exchange+" values(?,?,?,?,?,?)",(title[a],date[a],link[a],exchange,cur_time,''))
+            cur.execute("insert into notice_"+exchange+" values(?,?,?,?,?,?)",(title[a],date[a],link[a],exchange,cur_time,''))
         elif arr[a]=="mod":
             bot.sendMessage(chat_id=chat_ID, text='<Correction occured on '+exchange+'>')
             bot.sendMessage(chat_id=chat_ID, text=title[a]+"\nUpload Date: "+date[a]+"\n"+link[a])
-            #cur.execute("update notice_"+exchange+" set TITLE = ?, DB_MODIFIED = ? where LINK = ?",(title[a],cur_time,link[a]))
+            cur.execute("update notice_"+exchange+" set TITLE = ?, DB_MODIFIED = ? where LINK = ?",(title[a],cur_time,link[a]))
         else:
             print("이상이상2")
     
@@ -77,31 +86,42 @@ def GetandCompareandSet():
     soup=BeautifulSoup(source, 'html.parser')
     u_temp=soup.select('tbody tr td a')
     u_emBlue=soup.select('tbody tr.emBlue td.lAlign')
+    u_top=soup.select('tbody tr.top td.lAlign')
 
     u_length=0
-    u_link=[]
-    u_title=[]
-    u_date=[]
+    link=[]
+    title=[]
+    dates=[]
     for j in u_temp:
-        u_link.append(j.get('href'))
+        link.append(j.get('href'))
     for j in u_ttemp:
-        u_title.append(j.text)
+        title.append(j.text)
     for j in u_dtemp:
-        u_date.append(j.text)
+        dates.append(j.text)
         u_length+=1
 
     n=0
     for j in u_emBlue:
-        u_title.remove(j.text)
+        title.remove(j.text)
+        link.pop(0)
         n+=1
-    for i in range(n):
-        u_link.pop(0)
+    
+    n=0
+    for j in u_top:
+        title.pop(0)
+        dates.pop(0)
+        link.pop(0)
+        n+=1
+    u_length-=n
 
     base_board='https://upbit.com'
     i=0
     while i<u_length:
-        u_link[i]=base_board+u_link[i]
+        link[i]=base_board+link[i]
         i+=1
+
+    arr=CompareandSet(title, dates, link, "upbit")
+    send2U(arr,title,dates,link,"upbit")
 
 
     #get notices of Bithumb
@@ -110,51 +130,53 @@ def GetandCompareandSet():
 
     time.sleep(2)
     source=driver.page_source
-
     soup=BeautifulSoup(source, 'html.parser')
-    b_title=soup.select('tbody tr td.one-line')
-    b_date=soup.select('tbody tr td.small-size')[1::2]
+    title=soup.select("tbody tr[style*='white'] td.one-line")
+    dates=soup.select("tbody tr[style*='white'] td.small-size")[1::2]
 
     b_length=0
-    for j in b_date:
+    for j in dates:
         b_length+=1
     for i in range(b_length):
-        b_date[i]=b_date[i].text
-        b_title[i]=b_title[i].text
+        dates[i]=dates[i].text
+        title[i]=title[i].text
 
     i=0
-    for j in b_date:
+    for j in dates:
         if(j.find(":")==-1):
             i+=1
             continue
         else:
             if int(j[1:3])>now.hour:
                 yesterday=date.today()-timedelta(1)
-                b_date[i]=yesterday.strftime('%Y.%m.%d')
+                dates[i]=yesterday.strftime('%Y.%m.%d')
             elif int(j[1:3])<now.hour:
-                b_date[i]=str(now.year)+"."+str(now.month)+"."+str(now.day)
+                dates[i]=date.today().strftime('%Y.%m.%d')
             else:
                 if int(j[4:6])>now.minute:
                     yesterday=date.today()-timedelta(1)
-                    b_date[i]=yesterday.strftime('%Y.%m.%d')
+                    dates[i]=yesterday.strftime('%Y.%m.%d')
                 else:
-                    b_date[i]=str(now.year)+'.'+str(now.month)+'.'+str(now.day)
+                    dates[i]=date.today().strftime('%Y.%m.%d')
             i+=1
 
-    b_temp=soup.select('tbody tr')
-    b_link=[]
+    b_temp=soup.select("tbody tr[style*='white']")
+    link=[]
     string=''
 
     for j in b_temp:
         string=(j.get('onclick'))[15:22]
-        b_link.append(string)
+        link.append(string)
 
     base_board='https://cafe.bithumb.com/view/board-contents/'
 
     i=0
     while i<b_length:
-        b_link[i]=base_board+b_link[i]
+        link[i]=base_board+link[i]
         i+=1
+
+    arr=CompareandSet(title, dates, link, "bithumb")
+    send2U(arr,title,dates,link,"bithumb")
 
 
     #get notices of Coinone
@@ -165,23 +187,26 @@ def GetandCompareandSet():
     source=driver.page_source
     soup=BeautifulSoup(source, 'html.parser')
 
-    c_title=soup.select('div.pc-notice-dropdown .notice-title')
-    c_date=soup.select('div.pc-notice-dropdown .notice-date')
+    title=soup.select('div.pc-notice-dropdown .notice-title')
+    dates=soup.select('div.pc-notice-dropdown .notice-date')
 
     c_temp=soup.select('div.pc-notice-dropdown a.notice-link')
-    c_link=[]
+    link=[]
     c_length=0
     for j in c_temp:
-        c_link.append(j.get('href'))
+        link.append(j.get('href'))
         c_length+=1
 
     i=0
     while i<c_length:
-        c_link[i]=curl+c_link[i]
-        c_title[i]=c_title[i].text
-        c_date[i]=c_date[i].text
+        link[i]=curl+link[i]
+        title[i]=title[i].text
+        dates[i]=dates[i].text
         i+=1
     driver.quit()
+
+    arr=CompareandSet(title, dates, link, "coinone")
+    send2U(arr,title,dates,link,"coinone")
 
 
     #get notices of Korbit
@@ -190,47 +215,31 @@ def GetandCompareandSet():
     source=requests.get(kurl)
     soup=BeautifulSoup(source.text, 'html.parser')
 
-    k_title=soup.select('h1 a')
+    title=soup.select('h1 a')
     k_dtemp=soup.select('a time')
-    k_date=[]
+    dates=[]
     k_length=0
     for j in k_dtemp:
-        k_date.append(j.get('datetime'))
+        dates.append(j.get('datetime'))
         k_length+=1
 
     i=0
     while i<k_length:
-        k_date[i]=(k_date[i])[:10]
-        k_date[i]=(k_date[i]).replace("-",".")
+        dates[i]=(dates[i])[:10]
+        dates[i]=(dates[i]).replace("-",".")
         i+=1
 
-    k_temp=k_title
-    k_link=[]
+    k_temp=title
+    link=[]
     for j in k_temp:
-        k_link.append(j.get('href'))
+        link.append(j.get('href'))
 
     for i in range(k_length):
-        k_title[i]=k_title[i].text
+        title[i]=title[i].text
     
-    my_token='1339037346:AAHOFfZQZb5qqRV_xacyyVyhQb9-qaXWIFE'
-
-    bot=telegram.Bot(token=my_token)
-    updates= bot.getUpdates()
-    chat_ID=updates[-1].message.chat.id
-
-    u_arr=CompareandSet(u_title, u_date, u_link, "upbit")
-    b_arr=CompareandSet(b_title, b_date, b_link, "bithumb")
-    c_arr=CompareandSet(c_title, c_date, c_link, "coinone")
-    k_arr=CompareandSet(k_title, k_date, k_link, "korbit")
-
-    send2U(u_arr,bot,chat_ID,u_title,u_date,u_link,"upbit")
-    send2U(b_arr,bot,chat_ID,b_title,b_date,b_link,"bithumb")
-    send2U(c_arr,bot,chat_ID,c_title,c_date,c_link,"coinone")
-    send2U(k_arr,bot,chat_ID,k_title,k_date,k_link,"korbit")
-
-
-
-
+    arr=CompareandSet(title, dates, link, "korbit")
+    send2U(arr,title,dates,link,"korbit")
+    
 
 
 
@@ -256,20 +265,20 @@ for c in b_link:
 print('------------------')
 print('  THIS IS COINONE')
 print('------------------')
-for c in c_title:
+for c in title:
     print(c)
-for c in c_date:
+for c in dates:
     print(c)
-for c in c_link:
+for c in link:
     print(c)
 print('------------------')
 print('  THIS IS KORBIT')
 print('------------------')
-for c in k_title:
+for c in title:
     print(c)
-for c in k_date:
+for c in dates:
     print(c)
-for c in k_link:
+for c in link:
     print(c)
 '''
 
