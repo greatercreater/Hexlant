@@ -66,7 +66,7 @@ class Notice:
 
         bot=telegram.Bot(token=my_token)
         id=-1001472766381  #channel id 
-        id=1034101411
+        
 
         #send messages and update on db
         cur_time=datetime.now().strftime("%c")
@@ -77,10 +77,10 @@ class Notice:
             
             if self.arr[a]=="new":
                 pass
-                #cur.execute("insert into notice_"+exchange+" values(?,?,?,?,?,?)",(self.title[a],self.dates[a],self.link[a],exchange,cur_time,''))
+                cur.execute("insert into notice_"+exchange+" values(?,?,?,?,?,?)",(self.title[a],self.dates[a],self.link[a],exchange,cur_time,''))
             elif self.arr[a]=="mod":
                 pass
-                #cur.execute("update notice_"+exchange+" set TITLE = ?, DB_MODIFIED = ? where LINK = ?",(self.title[a],cur_time,self.link[a]))
+                cur.execute("update notice_"+exchange+" set TITLE = ?, DB_MODIFIED = ? where LINK = ?",(self.title[a],cur_time,self.link[a]))
             else:
                 print("이상이상2")
                 exit(1)
@@ -199,12 +199,10 @@ class Notice:
         
     def GetCoinone(self,driver):
         curl='https://coinone.co.kr'
-        #driver.get(curl)
-        req=requests.get(curl,"html.parser")
+        driver.get(curl)
 
         time.sleep(6)
-        #source=driver.page_source
-        source=req.text
+        source=driver.page_source
         soup=BeautifulSoup(source, 'html.parser')
 
         self.title=soup.select('div.pc-notice-dropdown .notice-title')
@@ -280,5 +278,3 @@ class Notice:
 
         self.__init__()
         driver.quit()
-    
-
